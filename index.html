@@ -1,0 +1,1654 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>ララの大冒険</title>
+  <style>
+    :root{
+      --pink:#ffd6ea;
+      --blue:#7ad7ff;
+      --green:#b7f3c2;
+      --ink:#2f2f2f;
+    }
+    html, body{height:100%;}
+    body{
+      margin:0;
+      display:grid;
+      place-items:center;
+      background: linear-gradient(135deg, #cfe9ff, #e9ffe7);
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--ink);
+      overscroll-behavior:none;
+    }
+    .app{
+      width:min(980px, 96vw);
+      display:grid;
+      gap:10px;
+      padding: 10px 0;
+    }
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:16px;
+      background: rgba(255,255,255,.6);
+      border:2px solid rgba(255,211,230,.75);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow:0 12px 26px rgba(0,0,0,.10);
+    }
+    .title{
+      font-weight:900;
+      font-size:16px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      user-select:none;
+      flex-wrap:wrap;
+    }
+    .badge{
+      display:inline-flex;
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:12px;
+      border:1px solid rgba(0,0,0,.08);
+      background: rgba(255,255,255,.75);
+    }
+    .btns{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;}
+    button{
+      appearance:none;
+      border:none;
+      cursor:pointer;
+      padding:10px 12px;
+      border-radius:14px;
+      font-weight:800;
+      background:#fff;
+      box-shadow: 0 8px 18px rgba(0,0,0,.10);
+      border:1px solid rgba(0,0,0,.08);
+    }
+    button.primary{
+      background: linear-gradient(180deg, #fff, #ffe7f2);
+      border:1px solid rgba(255,123,176,.35);
+    }
+    button:disabled{opacity:.5; cursor:not-allowed;}
+
+    canvas{
+      width:100%;
+      height:auto;
+      border-radius:18px;
+      background:#fff;
+      box-shadow:0 12px 30px rgba(0,0,0,.12);
+      border:2px solid rgba(255,211,230,.75);
+      touch-action:none;
+    }
+
+    .panel{
+      padding:14px 14px;
+      border-radius:18px;
+      background: rgba(255,255,255,.6);
+      border:2px solid rgba(255,211,230,.75);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow:0 12px 26px rgba(0,0,0,.10);
+    }
+    .center{
+      text-align:center;
+      display:grid;
+      gap:10px;
+      justify-items:center;
+    }
+    .big{
+      font-size:34px;
+      font-weight:900;
+      letter-spacing:.02em;
+    }
+    .sub{
+      opacity:.85;
+      line-height:1.5;
+      font-size:14px;
+    }
+    .grid3{
+      width:100%;
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:10px;
+    }
+    @media (max-width:720px){
+      .grid3{grid-template-columns: 1fr;}
+      .big{font-size:28px;}
+    }
+    .card{
+      padding:14px;
+      border-radius:16px;
+      background: rgba(255,255,255,.75);
+      border:1px solid rgba(0,0,0,.08);
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+      display:grid;
+      gap:10px;
+    }
+    .card h3{margin:0; font-size:16px;}
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      padding:2px 6px;
+      border-radius:8px;
+      border:1px solid rgba(0,0,0,.15);
+      background: rgba(255,255,255,.8);
+      font-size:12px;
+    }
+
+    /* ===== rotate hint ===== */
+    .rotateHint{
+      position:fixed; inset:0;
+      display:none;
+      place-items:center;
+      background: rgba(0,0,0,.45);
+      z-index: 9999;
+    }
+    .rotateCard{
+      padding:18px 16px;
+      border-radius:18px;
+      background: rgba(255,255,255,.86);
+      border:2px solid rgba(255,211,230,.75);
+      box-shadow:0 12px 30px rgba(0,0,0,.2);
+      text-align:center;
+      width:min(360px, 86vw);
+    }
+    .rotateBig{ font-size:20px; font-weight:900; }
+    .rotateSub{ margin-top:6px; font-size:13px; opacity:.85; line-height:1.4; }
+
+    /* ===== mobile controls ===== */
+    .mobileControls{
+      position:fixed;
+      left:0; right:0;
+      bottom: env(safe-area-inset-bottom, 0px);
+      padding: 14px 14px calc(14px + env(safe-area-inset-bottom, 0px)) 14px;
+      display:none;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:14px;
+      z-index: 9998;
+      pointer-events:none;
+    }
+    .mobileControls .mcLeft,
+    .mobileControls .mcRight{
+      display:flex;
+      gap:12px;
+      pointer-events:auto;
+    }
+    .mcBtn{
+      width:64px;
+      height:64px;
+      border-radius:18px;
+      font-size:24px;
+      font-weight:900;
+      border:none;
+      background: rgba(255,255,255,.86);
+      border:2px solid rgba(255,211,230,.75);
+      box-shadow:0 10px 22px rgba(0,0,0,.18);
+      touch-action:none;
+      user-select:none;
+      -webkit-user-select:none;
+    }
+    .mcJump{
+      width:76px;
+      height:76px;
+      border-radius:24px;
+    }
+    @media (orientation: landscape) and (max-width: 980px){
+      .mobileControls{ display:flex; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="title">
+        🐶 ララの大冒険
+        <span class="badge" id="modeBadge">HOME</span>
+        <span class="badge" id="diffBadge" style="display:none;"></span>
+      </div>
+      <div class="btns">
+        <button id="btnHome">ホーム</button>
+        <button id="btnSelect">難易度</button>
+        <button class="primary" id="btnBgm">BGM: OFF</button>
+        <button id="btnReset" disabled>リセット</button>
+      </div>
+    </div>
+
+    <canvas id="c" width="960" height="520"></canvas>
+    <div class="panel" id="ui"></div>
+  </div>
+
+  <!-- 縦のとき案内 -->
+  <div id="rotateHint" class="rotateHint" aria-hidden="true">
+    <div class="rotateCard">
+      <div class="rotateBig">横画面にしてね 📱↪️</div>
+      <div class="rotateSub">ランドスケープでフルスクリーン＆操作ボタンが出るよ</div>
+    </div>
+  </div>
+
+  <!-- モバイル操作 -->
+  <div id="mobileControls" class="mobileControls" aria-hidden="true">
+    <div class="mcLeft">
+      <button class="mcBtn" id="btnLeft">←</button>
+      <button class="mcBtn" id="btnRight">→</button>
+    </div>
+    <div class="mcRight">
+      <button class="mcBtn mcJump" id="btnJump">⤒</button>
+    </div>
+  </div>
+
+<script>
+/* =========================================================
+   ララの大冒険（完全版：PC+スマホ）
+   - PC: Arrow/A,D + Space
+   - Mobile: 横画面 + タッチボタン + (可能なら)Fullscreen
+   - 難易度: NORMAL / HARD / ONI
+   - 落下チキン: ⚠マーク → 近づくと強点滅 → 直前で落下（1回きり＆残る）
+   - 踏み判定を甘く
+========================================================= */
+
+// ---------- DOM ----------
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+const ui = document.getElementById("ui");
+const modeBadge = document.getElementById("modeBadge");
+const diffBadge = document.getElementById("diffBadge");
+const btnHome = document.getElementById("btnHome");
+const btnSelect = document.getElementById("btnSelect");
+const btnBgm = document.getElementById("btnBgm");
+const btnReset = document.getElementById("btnReset");
+
+// mobile ui
+const rotateHint = document.getElementById("rotateHint");
+const mobileControls = document.getElementById("mobileControls");
+const btnLeft = document.getElementById("btnLeft");
+const btnRight = document.getElementById("btnRight");
+const btnJump = document.getElementById("btnJump");
+
+// ---------- Input ----------
+const keys = new Set();
+window.addEventListener("keydown", (e) => keys.add(e.code));
+window.addEventListener("keyup", (e) => keys.delete(e.code));
+
+// ---------- Audio (tiny WebAudio) ----------
+let audioCtx = null;
+let bgmOn = false;
+let bgmTimer = null;
+
+function ensureAudio(){
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+function beep(freq=440, dur=0.08, type="sine", gain=0.08){
+  ensureAudio();
+  const t0 = audioCtx.currentTime;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(gain, t0 + 0.01);
+  g.gain.linearRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g).connect(audioCtx.destination);
+  o.start(t0);
+  o.stop(t0 + dur + 0.02);
+}
+const sfx = {
+  jump(){ beep(620, 0.06, "square", 0.06); },
+  pickup(){ beep(880, 0.07, "triangle", 0.07); },
+  stomp(){ beep(220, 0.09, "square", 0.08); },
+  hit(){ beep(110, 0.18, "sawtooth", 0.10); },
+  warn(){ beep(980, 0.06, "square", 0.05); },
+  clear(){
+    beep(660,0.10,"triangle",0.08);
+    setTimeout(()=>beep(990,0.12,"triangle",0.08),120);
+  }
+};
+function startBgm(){
+  ensureAudio();
+  stopBgm();
+  const seq = [440, 523, 587, 659, 587, 523, 440, 392];
+  let i = 0;
+  bgmTimer = setInterval(() => {
+    if (!bgmOn) return;
+    beep(seq[i%seq.length], 0.10, "triangle", 0.03);
+    i++;
+  }, 180);
+}
+function stopBgm(){
+  if (bgmTimer){ clearInterval(bgmTimer); bgmTimer = null; }
+}
+
+// ---------- Mobile helpers ----------
+function isMobileLike(){
+  return matchMedia("(pointer: coarse)").matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+function isLandscape(){
+  return matchMedia("(orientation: landscape)").matches;
+}
+function updateOrientationUI(){
+  if (!isMobileLike()){
+    rotateHint.style.display = "none";
+    mobileControls.style.display = "none";
+    return;
+  }
+  if (isLandscape()){
+    rotateHint.style.display = "none";
+    mobileControls.style.display = "flex";
+  } else {
+    rotateHint.style.display = "grid";
+    mobileControls.style.display = "none";
+  }
+}
+async function requestFullscreen(){
+  const el = document.documentElement;
+  try{
+    if (!document.fullscreenElement && el.requestFullscreen){
+      await el.requestFullscreen();
+    }
+  }catch(_){}
+}
+async function tryLockLandscape(){
+  try{
+    if (screen.orientation && screen.orientation.lock){
+      await screen.orientation.lock("landscape");
+    }
+  }catch(_){}
+}
+function bindHold(btn, keyCode){
+  if (!btn) return;
+  const down = (e)=>{ e.preventDefault(); keys.add(keyCode); };
+  const up   = (e)=>{ e.preventDefault(); keys.delete(keyCode); };
+  btn.addEventListener("pointerdown", down);
+  btn.addEventListener("pointerup", up);
+  btn.addEventListener("pointercancel", up);
+  btn.addEventListener("pointerleave", up);
+  btn.addEventListener("touchstart", down, {passive:false});
+  btn.addEventListener("touchend", up, {passive:false});
+}
+bindHold(btnLeft, "ArrowLeft");
+bindHold(btnRight, "ArrowRight");
+bindHold(btnJump, "Space");
+
+document.addEventListener("touchmove", (e)=>{ if (isMobileLike()) e.preventDefault(); }, { passive:false });
+
+function fitCanvas(){
+  const logicalW = 960;
+  const logicalH = 520;
+
+  const containerWidth = canvas.parentElement.clientWidth || window.innerWidth;
+  const maxW = Math.min(containerWidth, window.innerWidth);
+  const maxH = Math.min(window.innerHeight - 160, window.innerHeight);
+
+  const scale = Math.min(maxW / logicalW, maxH / logicalH);
+  const cssW = Math.floor(logicalW * scale);
+  const cssH = Math.floor(logicalH * scale);
+
+  canvas.style.width = cssW + "px";
+  canvas.style.height = cssH + "px";
+
+  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  canvas.width = Math.floor(logicalW * dpr);
+  canvas.height = Math.floor(logicalH * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+window.addEventListener("resize", ()=>{ updateOrientationUI(); fitCanvas(); });
+window.addEventListener("orientationchange", ()=>{ updateOrientationUI(); fitCanvas(); });
+
+async function enterMobilePlayMode(){
+  updateOrientationUI();
+  if (isMobileLike()){
+    await requestFullscreen();
+    await tryLockLandscape();
+  }
+  fitCanvas();
+}
+
+// ---------- Game state ----------
+const MODE = { HOME:"HOME", SELECT:"SELECT", PLAY:"PLAY", WIN:"WIN", GAMEOVER:"GAMEOVER" };
+let mode = MODE.HOME;
+
+const DIFF = { NORMAL:"普通", HARD:"難しい", ONI:"鬼" };
+let diffKey = null;        // "NORMAL" | "HARD" | "ONI"
+let difficultyLabel = null;
+
+const GRAVITY = 0.75;
+const MOVE_SPEED = 4.35;
+const BASE_JUMP = -13.5;
+const MAX_FALL = 18;
+
+const WORLD_W = 4700;
+let cameraX = 0;
+
+// ---------- World data ----------
+let pits = [];
+let floorSegments = [];
+let platforms = [];
+let movingPlatforms = [];
+let socks = [];
+let house = null;
+
+// ---------- Entities ----------
+let confetti = [];
+let enemies = [];
+let projectiles = [];
+let fallSpawners = [];
+
+let gameOverTimer = 0;
+const GAME_OVER_DELAY = 1.7;
+
+const player = {
+  x: 60, y: 0, w: 38, h: 48,
+  vx: 0, vy: 0,
+  onGround: false,
+  spawnX: 60, spawnY: 0,
+
+  jumpBoostTimer: 0,
+  jumpBoostMul: 1.38,
+
+  standingOnId: null,
+};
+
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+function overlap(a,b){
+  return a.x < b.x + b.w && a.x + a.w > b.x &&
+         a.y < b.y + b.h && a.y + a.h > b.y;
+}
+function rand(a,b){ return a + Math.random()*(b-a); }
+
+const FLOOR_Y = 440;
+
+function buildFloorSegments(){
+  const segs = [];
+  let cur = 0;
+  const sorted = pits.slice().sort((a,b)=>a.x-b.x);
+  for (const pit of sorted){
+    const a = pit.x, b = pit.x + pit.w;
+    if (a > cur) segs.push({ x: cur, y: FLOOR_Y, w: a-cur, h: 60, kind:"floor" });
+    cur = Math.max(cur, b);
+  }
+  if (cur < WORLD_W) segs.push({ x: cur, y: FLOOR_Y, w: WORLD_W-cur, h: 60, kind:"floor" });
+  return segs;
+}
+
+// ========== 落下チキン（直前落下） ==========
+const addFallSpawner = (x, yTop=70, warnRange=240, dropRange=85, delay=0.18)=>{
+  fallSpawners.push({
+    x, yTop,
+    warnRange,
+    dropRange,
+    used:false,
+    armed:false,
+    t:0,
+    delay
+  });
+};
+
+function spawnFallingChicken(x, yTop){
+  // 落下開始（1回落ちたらその場に“残る”）
+  enemies.push({
+    type:"falling",
+    x: x - 18,
+    y: yTop,
+    w: 36,
+    h: 28,
+    vx: 0,
+    vy: 1.5,
+    alive:true,
+    onGround:false,
+    // 落ちた後はその場で止まる
+    landed:false
+  });
+}
+
+// ---------- Enemy system ----------
+function addWalker(x, y, minX, maxX){
+  enemies.push({ type:"walker", x,y,w:34,h:28, vx:1.35, vy:0, alive:true, minX, maxX, onGround:true });
+}
+function addJumper(x, y, minX, maxX){
+  enemies.push({
+    type:"jumper", x,y,w:34,h:28, vx:1.25, vy:0, alive:true, minX, maxX, onGround:true,
+    cd: rand(0.4,1.8), cdMin:0.6, cdMax:2.1, jvMin:-10.8, jvMax:-13.8
+  });
+}
+function addFlyer(x, y, minX, maxX){
+  enemies.push({
+    type:"flyer", x,y,w:32,h:24, vx:1.4, alive:true, minX, maxX,
+    baseY: y, amp: 18, phase: Math.random()*Math.PI*2, t: 0
+  });
+}
+function addCharger(x, y, minX, maxX){
+  enemies.push({
+    type:"charger", x,y,w:36,h:28, vx:1.0, vy:0, alive:true, minX, maxX, onGround:true,
+    chargeTimer:0, chargeCooldown: rand(1.0,2.4)
+  });
+}
+function addFire(x, y, minX, maxX){
+  enemies.push({
+    type:"fire", x,y,w:38,h:30, vx:0.9, vy:0, alive:true, minX, maxX, onGround:true,
+    spitCd: rand(0.7,1.4)
+  });
+}
+
+function spawnFireball(from){
+  const dir = ((player.x + player.w/2) > (from.x + from.w/2)) ? 1 : -1;
+  projectiles.push({
+    x: from.x + from.w/2 + dir*10,
+    y: from.y + 10,
+    w: 14, h: 14,
+    vx: dir * 6.2,
+    vy: -2.4,
+    dead:false
+  });
+}
+
+function resetEnemies(kind){
+  enemies = [];
+  projectiles = [];
+
+  const groundY = FLOOR_Y - 28;
+
+  // ベース（企画書：ガーガーチキン系の役割）
+  addWalker(520,  groundY, 480, 680);
+  addJumper(1120, groundY, 980, 1250);
+  addFlyer(1750, 260, 1650, 2000);
+  addJumper(2100, groundY, 1880, 2260);
+  addCharger(2880, groundY, 2720, 3050);
+  addFlyer(3140, 240, 3000, 3400);
+  addWalker(3840, groundY, 3720, 3980);
+  addCharger(4120, groundY, 4040, 4280);
+  addJumper(4660, groundY, 4580, 4920);
+
+  if (kind === "HARD"){
+    addFlyer(980,  220, 880, 1120);
+    addJumper(3400, groundY, 3280, 3600);
+  }
+
+  if (kind === "ONI"){
+    addJumper(980,  groundY, 880, 1120);
+    addFlyer(1080, FLOOR_Y - 210, 980, 1260);
+
+    addCharger(2480, groundY, 2380, 2660);
+    addFlyer(3320, FLOOR_Y - 230, 3180, 3480);
+
+    addJumper(3920, groundY, 3820, 4100);
+    addCharger(4460, groundY, 4380, 4660);
+
+    // ファイア敵（鬼っぽさ）
+    addFire(2080, groundY, 1980, 2260);
+    addFire(3600, groundY, 3480, 3820);
+
+    enemies.forEach(e=>{
+      if (typeof e.vx === "number") e.vx *= 1.12;
+      if (e.type === "fire") e.spitCd = rand(0.6, 1.2);
+    });
+  }
+}
+
+// ---------- Moving platforms ----------
+function updateMovingPlatforms(dt){
+  for (const m of movingPlatforms){
+    const prevX = m.x;
+    m.x += m.dir * m.speed * dt;
+    if (m.x > m.baseX + m.range){ m.x = m.baseX + m.range; m.dir *= -1; }
+    if (m.x < m.baseX - m.range){ m.x = m.baseX - m.range; m.dir *= -1; }
+    m.dx = m.x - prevX;
+  }
+}
+
+// ---------- Collision ----------
+let prevPlayerY = 0;
+
+function resolveCollisions(){
+  player.onGround = false;
+  player.standingOnId = null;
+
+  // X
+  player.x += player.vx;
+
+  for (const p of platforms){
+    if (overlap(player, p)){
+      if (player.vx > 0) player.x = p.x - player.w;
+      if (player.vx < 0) player.x = p.x + p.w;
+      player.vx = 0;
+    }
+  }
+  for (const m of movingPlatforms){
+    if (overlap(player, m)){
+      if (player.vx > 0) player.x = m.x - player.w;
+      if (player.vx < 0) player.x = m.x + m.w;
+      player.vx = 0;
+    }
+  }
+
+  // Y
+  player.y += player.vy;
+
+  for (const p of platforms){
+    if (!overlap(player,p)) continue;
+    if (player.vy > 0){
+      player.y = p.y - player.h;
+      player.vy = 0;
+      player.onGround = true;
+      player.standingOnId = null;
+    } else if (player.vy < 0){
+      player.y = p.y + p.h;
+      player.vy = 0;
+    }
+  }
+
+  for (const m of movingPlatforms){
+    if (!overlap(player,m)) continue;
+    if (player.vy > 0){
+      player.y = m.y - player.h;
+      player.vy = 0;
+      player.onGround = true;
+      player.standingOnId = m.id;
+    } else if (player.vy < 0){
+      player.y = m.y + m.h;
+      player.vy = 0;
+    }
+  }
+
+  for (const f of floorSegments){
+    if (!overlap(player,f)) continue;
+    if (player.vy > 0){
+      player.y = f.y - player.h;
+      player.vy = 0;
+      player.onGround = true;
+      player.standingOnId = null;
+    } else if (player.vy < 0){
+      player.y = f.y + f.h;
+      player.vy = 0;
+    }
+  }
+
+  player.x = Math.max(0, player.x);
+}
+
+function updateCamera(){
+  const target = player.x - 960 * 0.45;
+  cameraX = clamp(target, 0, WORLD_W - 960);
+}
+
+// ---------- Pickups ----------
+function checkSockPickup(){
+  for (const s of socks){
+    if (s.taken) continue;
+    if (overlap(player, s)){
+      s.taken = true;
+      player.jumpBoostTimer = 6.0;
+      sfx.pickup();
+    }
+  }
+}
+
+// ---------- Projectiles ----------
+function updateProjectiles(dt){
+  for (const b of projectiles){
+    b.vy += 0.25;
+    b.x += b.vx;
+    b.y += b.vy;
+    if (b.y > 900 || b.x < -200 || b.x > WORLD_W + 200) b.dead = true;
+  }
+  projectiles = projectiles.filter(b => !b.dead);
+}
+
+// ---------- Enemy update ----------
+function enemyLand(e){
+  e.onGround = true;
+  e.vy = 0;
+  // fallingは落下後 “その場に残る”
+  if (e.type === "falling"){
+    e.landed = true;
+    e.type = "fallHazard"; // 止まる敵
+    e.vx = 0;
+    e.minX = e.x;
+    e.maxX = e.x + 1;
+  }
+}
+
+function updateEnemies(dt){
+  for (const e of enemies){
+    if (!e.alive) continue;
+
+    if (e.type === "flyer"){
+      e.t += dt;
+      e.x += e.vx;
+      if (e.x < e.minX){ e.x = e.minX; e.vx *= -1; }
+      if (e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx *= -1; }
+      e.y = e.baseY + Math.sin((e.t*3.0) + e.phase) * e.amp;
+      continue;
+    }
+
+    // fallHazard: その場固定（歩かない）
+    if (e.type === "fallHazard"){
+      e.vx = 0;
+    }
+
+    // movement for walkers/jumpers/chargers/fire (fallingはx固定)
+    if (e.type !== "falling" && e.type !== "fallHazard"){
+      e.x += e.vx;
+      if (e.minX != null && e.maxX != null){
+        if (e.x < e.minX){ e.x = e.minX; e.vx *= -1; }
+        if (e.x + e.w > e.maxX){ e.x = e.maxX - e.w; e.vx *= -1; }
+      }
+    }
+
+    if (e.type === "jumper"){
+      e.cd -= dt;
+      if (e.cd <= 0 && e.onGround){
+        e.vy = rand(e.jvMax, e.jvMin);
+        e.onGround = false;
+        e.cd = rand(e.cdMin, e.cdMax);
+      }
+    }
+
+    if (e.type === "charger"){
+      const dist = Math.abs((player.x + player.w/2) - (e.x + e.w/2));
+      e.chargeCooldown -= dt;
+      if (e.chargeTimer > 0){
+        e.chargeTimer -= dt;
+      } else if (e.chargeCooldown <= 0 && dist < 220 && e.onGround){
+        const dir = ((player.x + player.w/2) > (e.x + e.w/2)) ? 1 : -1;
+        e.vx = dir * 4.2;
+        e.chargeTimer = 0.55;
+        e.chargeCooldown = rand(1.2, 2.6);
+      } else {
+        const sign = e.vx >= 0 ? 1 : -1;
+        e.vx = sign * 1.0;
+      }
+    }
+
+    if (e.type === "fire"){
+      e.spitCd -= dt;
+      if (e.spitCd <= 0){
+        spawnFireball(e);
+        e.spitCd = rand(0.7, 1.4);
+      }
+    }
+
+    // gravity for ground types + falling
+    if (e.type !== "flyer"){
+      e.vy += GRAVITY;
+      e.vy = Math.min(e.vy, MAX_FALL);
+      e.y += e.vy;
+    }
+
+    // landing
+    e.onGround = false;
+
+    // floor
+    for (const f of floorSegments){
+      if (overlap(e, f) && e.vy > 0){
+        e.y = f.y - e.h;
+        enemyLand(e);
+        break;
+      }
+    }
+
+    // platforms
+    if (!e.onGround){
+      for (const p of platforms){
+        if (overlap(e, p) && e.vy > 0){
+          e.y = p.y - e.h;
+          enemyLand(e);
+          break;
+        }
+      }
+    }
+
+    // moving platforms
+    if (!e.onGround){
+      for (const m of movingPlatforms){
+        if (overlap(e, m) && e.vy > 0){
+          e.y = m.y - e.h;
+          enemyLand(e);
+          break;
+        }
+      }
+    }
+
+    // out
+    if (e.y > 900){
+      e.y = FLOOR_Y - e.h;
+      enemyLand(e);
+    }
+  }
+}
+
+// ---------- Enemy hits ----------
+function startGameOver(){
+  if (mode !== MODE.PLAY) return;
+  mode = MODE.GAMEOVER;
+  gameOverTimer = GAME_OVER_DELAY;
+  sfx.hit();
+  renderGameOverUi();
+}
+
+function checkEnemyHits(){
+  // fireballs hit
+  for (const b of projectiles){
+    if (overlap(player, b)){ startGameOver(); return; }
+  }
+
+  for (const e of enemies){
+    if (!e.alive) continue;
+    if (!overlap(player, e)) continue;
+
+    // ★踏み判定：甘くする（上からっぽい＆余裕）
+    const prevBottom = prevPlayerY + player.h;
+    const playerCenterX = player.x + player.w/2;
+    const enemyCenterX  = e.x + e.w/2;
+    const xOk = Math.abs(playerCenterX - enemyCenterX) < (e.w * 0.65);
+
+    const stomp = (player.vy > 0) && xOk && (prevBottom <= e.y + 14);
+
+    if (stomp){
+      e.alive = false;
+      player.vy = -9.5;
+      sfx.stomp();
+    } else {
+      startGameOver();
+      return;
+    }
+  }
+}
+
+// ---------- Goal ----------
+function checkGoal(){
+  if (!house) return;
+  if (overlap(player, house)){
+    mode = MODE.WIN;
+    spawnConfetti();
+    sfx.clear();
+    renderWinUi();
+  }
+}
+
+// ---------- Render UI ----------
+function renderHome(){
+  modeBadge.textContent = "HOME";
+  diffBadge.style.display = "none";
+  btnReset.disabled = true;
+
+  ui.innerHTML = `
+    <div class="center">
+      <div class="big">ララの大冒険</div>
+      <div class="sub">
+        <span class="kbd">←→</span>/<span class="kbd">A D</span> で移動、
+        <span class="kbd">Space</span> でジャンプ
+      </div>
+      <button class="primary" id="startBtn">スタート</button>
+      <div class="sub">スマホは横画面でボタン操作だよ</div>
+    </div>
+  `;
+  document.getElementById("startBtn").onclick = async () => {
+    await enterMobilePlayMode();
+    setMode(MODE.SELECT);
+  };
+}
+
+function renderSelect(){
+  modeBadge.textContent = "SELECT";
+  diffBadge.style.display = "none";
+  btnReset.disabled = true;
+
+  ui.innerHTML = `
+    <div class="center">
+      <div class="big">難易度を選んでね</div>
+      <div class="grid3">
+        <div class="card">
+          <h3>普通</h3>
+          <button class="primary" data-d="NORMAL">PLAY</button>
+        </div>
+        <div class="card">
+          <h3>難しい</h3>
+          <button class="primary" data-d="HARD">PLAY</button>
+        </div>
+        <div class="card">
+          <h3>鬼</h3>
+          <button class="primary" data-d="ONI">PLAY</button>
+        </div>
+      </div>
+      <div class="sub">（スマホは横画面推奨）</div>
+    </div>
+  `;
+
+  ui.querySelectorAll("button[data-d]").forEach(btn=>{
+    btn.onclick = async () => {
+      const k = btn.getAttribute("data-d");
+      await enterMobilePlayMode();
+      startGame(k);
+    };
+  });
+}
+
+function renderHud(){
+  modeBadge.textContent = "PLAY";
+  diffBadge.textContent = difficultyLabel;
+  diffBadge.style.display = "inline-flex";
+  btnReset.disabled = false;
+
+  const boostText = (player.jumpBoostTimer > 0)
+    ? `靴下パワー：ON（あと ${player.jumpBoostTimer.toFixed(1)}s）`
+    : `靴下パワー：OFF`;
+
+  ui.innerHTML = `
+    <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center; justify-content:space-between;">
+      <div style="font-weight:900;">${difficultyLabel} / ${boostText}</div>
+      <div class="sub" style="margin:0;">
+        PC: <span class="kbd">←→</span>/<span class="kbd">A D</span> / <span class="kbd">Space</span>
+        ・Mobile: ボタン
+      </div>
+    </div>
+  `;
+}
+
+function renderGameOverUi(){
+  modeBadge.textContent = "GAME OVER";
+  diffBadge.textContent = difficultyLabel;
+  diffBadge.style.display = "inline-flex";
+  btnReset.disabled = true;
+
+  ui.innerHTML = `
+    <div class="center">
+      <div class="big">GAME OVER</div>
+      <div class="sub">リスタートまで ${Math.max(0,gameOverTimer).toFixed(1)}s</div>
+    </div>
+  `;
+}
+
+function renderWinUi(){
+  modeBadge.textContent = "CLEAR";
+  diffBadge.textContent = difficultyLabel;
+  diffBadge.style.display = "inline-flex";
+  btnReset.disabled = true;
+
+  ui.innerHTML = `
+    <div class="center">
+      <div class="big">CLEAR!! 🎉</div>
+      <div class="sub">ララはおうちに帰れた！</div>
+      <button class="primary" id="backBtn">難易度選択に戻る</button>
+    </div>
+  `;
+  document.getElementById("backBtn").onclick = () => setMode(MODE.SELECT);
+}
+
+function setMode(m){
+  mode = m;
+  if (mode === MODE.HOME) renderHome();
+  if (mode === MODE.SELECT) renderSelect();
+}
+
+function startGame(kind){
+  resetStage(kind);
+  mode = MODE.PLAY;
+  renderHud();
+  updateCamera();
+}
+
+// ---------- Stage build ----------
+function resetStage(kind){
+  diffKey = kind;
+  difficultyLabel = DIFF[kind];
+
+  // pits（幅は調整済み）
+  pits =
+    kind==="NORMAL"
+      ? [{x:900,w:120},{x:2100,w:140},{x:3000,w:160}]
+      : kind==="HARD"
+        ? [{x:820,w:160},{x:1650,w:180},{x:2600,w:200},{x:3400,w:190}]
+        : [{x:760,w:180},{x:1540,w:200},{x:2400,w:220},{x:3240,w:220},{x:3960,w:220}];
+
+  floorSegments = buildFloorSegments();
+
+  platforms = [];
+
+  if (kind === "NORMAL") {
+    platforms.push({ id:"p1", x: 240,  y: 360, w: 160, h: 18 });
+    platforms.push({ id:"p2", x: 520,  y: 310, w: 180, h: 18 });
+    platforms.push({ id:"p3", x: 780,  y: 260, w: 150, h: 18 });
+    platforms.push({ id:"p4", x: 1180, y: 380, w: 220, h: 18 });
+    platforms.push({ id:"p5", x: 1500, y: 330, w: 180, h: 18 });
+    platforms.push({ id:"p6", x: 2200, y: 320, w: 200, h: 18 });
+    platforms.push({ id:"p7", x: 2480, y: 280, w: 180, h: 18 });
+    platforms.push({ id:"p8", x: 2800, y: 360, w: 240, h: 18 });
+    platforms.push({ id:"p9", x: 3120, y: 320, w: 200, h: 18 });
+  }
+
+  if (kind === "HARD") {
+    platforms.push({ id:"h1", x: 240, y: 380, w: 140, h: 18 });
+    platforms.push({ id:"h2", x: 430, y: 350, w: 120, h: 18 });
+    platforms.push({ id:"h3", x: 590, y: 320, w: 110, h: 18 });
+    platforms.push({ id:"h4", x: 740, y: 290, w: 120, h: 18 });
+    platforms.push({ id:"h5", x: 900, y: 260, w: 130, h: 18 });
+
+    platforms.push({ id:"h6", x: 1220, y: 400, w: 120, h: 18 });
+    platforms.push({ id:"h7", x: 1380, y: 360, w: 120, h: 18 });
+    platforms.push({ id:"h8", x: 1540, y: 320, w: 120, h: 18 });
+    platforms.push({ id:"h9", x: 1700, y: 280, w: 140, h: 18 });
+    platforms.push({ id:"h10", x: 1920, y: 330, w: 180, h: 18 });
+
+    platforms.push({ id:"h11", x: 2260, y: 340, w: 200, h: 18 });
+    platforms.push({ id:"h12", x: 2540, y: 300, w: 180, h: 18 });
+    platforms.push({ id:"h13", x: 2860, y: 360, w: 240, h: 18 });
+    platforms.push({ id:"h14", x: 3180, y: 320, w: 200, h: 18 });
+    platforms.push({ id:"h15", x: 3500, y: 300, w: 220, h: 18 });
+  }
+
+  if (kind === "ONI") {
+    platforms.push({ id:"o1", x: 240,  y: 360, w: 120, h: 18 });
+    platforms.push({ id:"o2", x: 410,  y: 300, w: 110, h: 18 });
+    platforms.push({ id:"o3", x: 570,  y: 340, w: 100, h: 18 });
+    platforms.push({ id:"o4", x: 720,  y: 270, w: 110, h: 18 });
+    platforms.push({ id:"o5", x: 880,  y: 320, w: 100, h: 18 });
+    platforms.push({ id:"o6", x: 1040, y: 250, w: 110, h: 18 });
+
+    platforms.push({ id:"o7",  x: 2140, y: 300, w: 120, h: 18 });
+    platforms.push({ id:"o8",  x: 2320, y: 260, w: 110, h: 18 });
+    platforms.push({ id:"o9",  x: 2500, y: 220, w: 100, h: 18 });
+    platforms.push({ id:"o10", x: 2900, y: 260, w: 140, h: 18 });
+    platforms.push({ id:"o11", x: 3120, y: 230, w: 120, h: 18 });
+    platforms.push({ id:"o12", x: 3500, y: 280, w: 160, h: 18 });
+
+    platforms.push({ id:"o13", x: 3820, y: 320, w: 120, h: 18 });
+    platforms.push({ id:"o14", x: 4000, y: 270, w: 110, h: 18 });
+    platforms.push({ id:"o15", x: 4180, y: 310, w: 110, h: 18 });
+    platforms.push({ id:"o16", x: 4380, y: 250, w: 120, h: 18 });
+
+    // 基本ジャンプで乗れる“救済足場”（前/中/後に1つ）
+    platforms.push({ id:"oEasy2", x: 1980, y: 330, w: 200, h: 18 });
+    platforms.push({ id:"oEasy3", x: 4050, y: 330, w: 200, h: 18 });
+  }
+
+  // moving platforms
+  movingPlatforms = [];
+  if (kind !== "NORMAL"){
+    movingPlatforms.push({ id:"m1", baseX: 1500, x:1500, y: 300, w: 140, h: 18, range: 160, speed: 90, dir: 1, dx:0 });
+    movingPlatforms.push({ id:"m2", baseX: 3260, x:3260, y: 260, w: 140, h: 18, range: 220, speed: 120, dir:-1, dx:0 });
+  }
+  if (kind === "ONI"){
+    movingPlatforms.push({ id:"m3", baseX: 4420, x:4420, y: 330, w: 160, h: 18, range: 180, speed: 120, dir: 1, dx:0 });
+  }
+
+  // socks（足場の上）
+  socks = [];
+  function putSockOn(x, platformY){
+    socks.push({ x, y: platformY - 30, w: 26, h: 26, taken:false });
+  }
+  if (kind === "NORMAL"){
+    putSockOn(560, 310);
+    putSockOn(1520, 330);
+    putSockOn(2500, 280);
+  }
+  if (kind === "HARD"){
+    putSockOn(920, 260);
+    putSockOn(1760, 280);
+    putSockOn(3520, 300);
+  }
+  if (kind === "ONI"){
+    putSockOn(740, 270);
+    putSockOn(2520, 220);
+    putSockOn(4385, 250);
+  }
+
+  // goal house
+  house = { x: WORLD_W - 260, y: FLOOR_Y - 120, w: 160, h: 120 };
+
+  // player reset
+  player.x = player.spawnX;
+  player.y = FLOOR_Y - player.h;
+  player.spawnY = player.y;
+  player.vx = 0; player.vy = 0;
+  player.onGround = false;
+  player.jumpBoostTimer = 0;
+  player.standingOnId = null;
+
+  // enemies
+  resetEnemies(kind);
+
+  // falling spawners
+  fallSpawners = [];
+  if (kind === "HARD"){
+    addFallSpawner(1580, 80, 240, 85, 0.18);
+    addFallSpawner(3160, 70, 240, 85, 0.18);
+  }
+  if (kind === "ONI"){
+    addFallSpawner(920,  70, 250, 90, 0.18);
+    addFallSpawner(1800, 60, 250, 90, 0.18);
+    addFallSpawner(2840, 70, 250, 90, 0.18);
+    addFallSpawner(3640, 60, 240, 85, 0.18);
+    addFallSpawner(4200, 60, 240, 85, 0.18);
+  }
+
+  cameraX = 0;
+}
+
+// ---------- Confetti ----------
+function spawnConfetti(){
+  confetti = [];
+  for (let i=0;i<140;i++){
+    confetti.push({
+      x: cameraX + Math.random()*960,
+      y: -20 - Math.random()*240,
+      vx: -1 + Math.random()*2,
+      vy: 2 + Math.random()*4,
+      r: 2 + Math.random()*4,
+      a: 0.6 + Math.random()*0.4
+    });
+  }
+}
+
+// ---------- Draw helpers ----------
+function roundRect(x, y, w, h, r){
+  r = Math.min(r, w/2, h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r);
+  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h);
+  ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r);
+  ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
+
+function drawLala(x, y, w, h, happy=false){
+  ctx.fillStyle = `rgba(0,0,0,${player.onGround ? 0.18 : 0.08})`;
+  ctx.beginPath();
+  ctx.ellipse(x + w/2, y + h + 6, w * 0.35, h * 0.12, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const body = "#f2d7b6", face="#f7e6cf", ear="#e8c59d", dark="#2b2b2b";
+
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.ellipse(x + w/2, y + h/2 + 8, w/2, h/2 - 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = ear;
+  for (const dx of [-10, 10]) {
+    ctx.beginPath();
+    ctx.ellipse(x + w/2 + dx, y + h - 8, 6, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.fillStyle = face;
+  ctx.beginPath();
+  ctx.ellipse(x + w/2, y + h/2 - 6, w/2 - 3, h/2 - 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = ear;
+  ctx.beginPath();
+  ctx.ellipse(x + 8, y + h/2 - 10, 8, 13, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x + w - 8, y + h/2 - 10, 8, 13, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(255, 123, 176, 0.25)";
+  ctx.beginPath();
+  ctx.ellipse(x + w/2 - 12, y + h/2 - 4, 5, 4, 0, 0, Math.PI * 2);
+  ctx.ellipse(x + w/2 + 12, y + h/2 - 4, 5, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = dark;
+  ctx.beginPath();
+  ctx.arc(x + w/2 - 7, y + h/2 - 12, 3.2, 0, Math.PI * 2);
+  ctx.arc(x + w/2 + 7, y + h/2 - 12, 3.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(255,255,255,0.9)";
+  ctx.beginPath();
+  ctx.arc(x + w/2 - 8, y + h/2 - 13, 1.2, 0, Math.PI * 2);
+  ctx.arc(x + w/2 + 6, y + h/2 - 13, 1.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = dark;
+  ctx.beginPath();
+  ctx.arc(x + w/2, y + h/2 - 6, 3.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(43,43,43,0.85)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  if (happy){
+    ctx.arc(x + w/2, y + h/2 - 2, 8, 0.15*Math.PI, 0.85*Math.PI);
+  } else {
+    ctx.arc(x + w/2, y + h/2, 6, 0.2*Math.PI, 0.8*Math.PI);
+  }
+  ctx.stroke();
+}
+
+function drawChicken(x, y, w, h, type){
+  const base = (type === "charger") ? "#ffcc3d"
+             : (type === "fire")    ? "#ffb84a"
+             : (type === "fallHazard" || type === "falling") ? "#ffe16a"
+             : "#ffd54a";
+
+  ctx.fillStyle = base;
+  ctx.beginPath();
+  ctx.ellipse(x + w/2, y + h/2 + 2, w/2, h/2, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle = "#ff9a3c";
+  ctx.beginPath();
+  ctx.ellipse(x + w/2, y + h/2 + 3, 6, 4, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle = "#2b2b2b";
+  ctx.beginPath();
+  ctx.arc(x + w/2 - 6, y + h/2 - 4, 2.6, 0, Math.PI*2);
+  ctx.arc(x + w/2 + 6, y + h/2 - 4, 2.6, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle = "#ff6b9e";
+  ctx.beginPath();
+  ctx.ellipse(x + w/2 - 6, y + 2, 4, 5, 0.2, 0, Math.PI*2);
+  ctx.ellipse(x + w/2,     y + 0, 4, 6, 0,   0, Math.PI*2);
+  ctx.ellipse(x + w/2 + 6, y + 2, 4, 5, -0.2,0, Math.PI*2);
+  ctx.fill();
+
+  if (type === "charger"){
+    ctx.strokeStyle = "rgba(43,43,43,0.8)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x + w/2 - 12, y + h/2 - 10);
+    ctx.lineTo(x + w/2 - 4,  y + h/2 - 12);
+    ctx.moveTo(x + w/2 + 12, y + h/2 - 10);
+    ctx.lineTo(x + w/2 + 4,  y + h/2 - 12);
+    ctx.stroke();
+  }
+  if (type === "fire"){
+    ctx.fillStyle = "rgba(255,80,80,0.75)";
+    ctx.beginPath();
+    ctx.arc(x + w/2, y - 4, 6, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+function drawFlyer(x, y, w, h){
+  ctx.fillStyle = "#ffe06a";
+  ctx.beginPath();
+  ctx.ellipse(x + w/2, y + h/2, w/2, h/2, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(122,215,255,0.9)";
+  ctx.beginPath();
+  ctx.ellipse(x + 4, y + h/2, 8, 5, -0.4, 0, Math.PI*2);
+  ctx.ellipse(x + w - 4, y + h/2, 8, 5, 0.4, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle = "#2b2b2b";
+  ctx.beginPath();
+  ctx.arc(x + w/2 - 5, y + h/2 - 2, 2.3, 0, Math.PI*2);
+  ctx.arc(x + w/2 + 5, y + h/2 - 2, 2.3, 0, Math.PI*2);
+  ctx.fill();
+}
+
+function drawSock(x, y, w, h){
+  ctx.fillStyle = "#7ad7ff";
+  ctx.beginPath(); roundRect(x, y, w, h, 6); ctx.fill();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath(); roundRect(x, y + h*0.65, w, h*0.35, 6); ctx.fill();
+
+  ctx.fillStyle = "#ffd6ea";
+  ctx.beginPath(); roundRect(x, y, w, 6, 6); ctx.fill();
+}
+
+function drawHouse(x, y, w, h){
+  ctx.fillStyle = "#fff2c6";
+  ctx.beginPath(); roundRect(x, y + 35, w, h - 35, 16); ctx.fill();
+
+  ctx.fillStyle = "#ff7bb0";
+  ctx.beginPath();
+  ctx.moveTo(x + w/2, y);
+  ctx.lineTo(x, y + 50);
+  ctx.lineTo(x + w, y + 50);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#b08a66";
+  ctx.beginPath(); roundRect(x + w*0.42, y + h*0.55, w*0.16, h*0.30, 10); ctx.fill();
+
+  ctx.fillStyle = "#7ad7ff";
+  ctx.beginPath();
+  roundRect(x + w*0.18, y + h*0.55, w*0.14, h*0.14, 8);
+  roundRect(x + w*0.68, y + h*0.55, w*0.14, h*0.14, 8);
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(47,47,47,0.85)";
+  ctx.font = "16px system-ui";
+  ctx.fillText("おうち（GOAL）", x + 20, y + 24);
+}
+
+function drawBackground(){
+  if (diffKey === "ONI"){
+    const g = ctx.createLinearGradient(0,0,0,520);
+    g.addColorStop(0, "#1b1530");
+    g.addColorStop(1, "#3a1c2f");
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,960,520);
+  } else {
+    ctx.fillStyle = "#eaf7ff";
+    ctx.fillRect(0,0,960,520);
+  }
+
+  ctx.fillStyle = "rgba(255,255,255,0.75)";
+  const cloudBase = -(cameraX * 0.25);
+  const clouds = [
+    {x: cloudBase + 120, y: 90, r: 32},
+    {x: cloudBase + 160, y: 80, r: 26},
+    {x: cloudBase + 200, y: 92, r: 30},
+    {x: cloudBase + 620, y: 70, r: 28},
+    {x: cloudBase + 650, y: 60, r: 22},
+    {x: cloudBase + 680, y: 72, r: 26},
+    {x: cloudBase + 980, y: 92, r: 30},
+  ];
+  for (const c of clouds){
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, c.r, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+function drawPlatforms(){
+  for (const p of platforms){
+    const x = p.x - cameraX;
+    if (x + p.w < -60 || x > 960 + 60) continue;
+    ctx.fillStyle = "#ffd6ea";
+    ctx.fillRect(x, p.y, p.w, p.h);
+    ctx.strokeStyle = "rgba(255, 123, 176, 0.35)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x + 1, p.y + 1, p.w - 2, p.h - 2);
+  }
+
+  for (const m of movingPlatforms){
+    const x = m.x - cameraX;
+    if (x + m.w < -60 || x > 960 + 60) continue;
+    ctx.fillStyle = "rgba(122,215,255,0.9)";
+    ctx.fillRect(x, m.y, m.w, m.h);
+    ctx.strokeStyle = "rgba(47,47,47,0.20)";
+    ctx.strokeRect(x + 1, m.y + 1, m.w - 2, m.h - 2);
+  }
+
+  for (const f of floorSegments){
+    const x = f.x - cameraX;
+    if (x + f.w < -60 || x > 960 + 60) continue;
+    ctx.fillStyle = "#b7f3c2";
+    ctx.fillRect(x, f.y, f.w, f.h);
+    ctx.strokeStyle = "rgba(255, 123, 176, 0.35)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x + 1, f.y + 1, f.w - 2, f.h - 2);
+  }
+
+  for (const pit of pits){
+    const px = pit.x - cameraX;
+    if (px + pit.w < -60 || px > 960 + 60) continue;
+    ctx.strokeStyle = "rgba(47,47,47,0.35)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(px + 10, FLOOR_Y);
+    ctx.lineTo(px + pit.w - 10, FLOOR_Y);
+    ctx.stroke();
+  }
+}
+
+function drawConfetti(dt){
+  for (const p of confetti){
+    p.x += p.vx * 60 * dt;
+    p.y += p.vy * 60 * dt;
+    p.vy += 0.02 * 60 * dt;
+
+    ctx.fillStyle = `rgba(255,123,176,${p.a})`;
+    ctx.beginPath();
+    ctx.arc(p.x - cameraX, p.y, p.r, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = `rgba(122,215,255,${p.a})`;
+    ctx.beginPath();
+    ctx.arc(p.x - cameraX + 6, p.y + 2, p.r*0.9, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+function drawProjectiles(){
+  for (const b of projectiles){
+    const x = b.x - cameraX;
+    ctx.fillStyle = "rgba(255,80,80,0.9)";
+    ctx.beginPath();
+    ctx.arc(x + b.w/2, b.y + b.h/2, b.w/2, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+function drawFallWarnings(){
+  // 落下ポイントの上に小さな⚠（近いと強点滅）
+  for (const sp of fallSpawners){
+    if (sp.used) continue;
+    const sx = sp.x - cameraX;
+    if (sx < -80 || sx > 960 + 80) continue;
+
+    const dx = Math.abs((player.x + player.w/2) - sp.x);
+    const near = dx < sp.warnRange;
+    const pulse = near ? (0.45 + 0.55*Math.sin(performance.now()/70)) : 0.9;
+
+    ctx.save();
+    ctx.globalAlpha = pulse;
+    ctx.fillStyle = "rgba(255,80,80,0.95)";
+    ctx.font = "20px system-ui";
+    ctx.fillText("⚠", sx - 6, sp.yTop + 22);
+    ctx.restore();
+  }
+}
+
+// ---------- Main update/draw ----------
+let lastT = performance.now();
+
+function update(dt){
+  prevPlayerY = player.y;
+
+  updateMovingPlatforms(dt);
+
+  if (player.onGround && player.standingOnId){
+    const m = movingPlatforms.find(mm => mm.id === player.standingOnId);
+    if (m) player.x += m.dx;
+  }
+
+  if (mode === MODE.WIN){
+    player.vx = 0;
+    if (player.onGround && (Math.random() < 0.04)) player.vy = -12.5;
+    player.vy += GRAVITY;
+    player.vy = Math.min(player.vy, MAX_FALL);
+    resolveCollisions();
+    updateCamera();
+    return;
+  }
+
+  if (mode === MODE.GAMEOVER){
+    gameOverTimer -= dt;
+    player.vy += GRAVITY;
+    player.vy = Math.min(player.vy, MAX_FALL);
+    player.y += player.vy;
+    updateCamera();
+    if (gameOverTimer <= 0){
+      startGame(diffKey);
+    }
+    return;
+  }
+
+  if (mode !== MODE.PLAY) return;
+
+  renderHud();
+
+  // input
+  const left  = keys.has("ArrowLeft") || keys.has("KeyA");
+  const right = keys.has("ArrowRight") || keys.has("KeyD");
+  const jump  = keys.has("Space");
+
+  player.vx = 0;
+  if (left)  player.vx = -MOVE_SPEED;
+  if (right) player.vx =  MOVE_SPEED;
+
+  const jumpPower = (player.jumpBoostTimer > 0) ? (BASE_JUMP * player.jumpBoostMul) : BASE_JUMP;
+  if (jump && player.onGround){
+    player.vy = jumpPower;
+    sfx.jump();
+  }
+
+  if (player.jumpBoostTimer > 0) player.jumpBoostTimer = Math.max(0, player.jumpBoostTimer - dt);
+
+  player.vy += GRAVITY;
+  player.vy = Math.min(player.vy, MAX_FALL);
+
+  resolveCollisions();
+
+  // ★落下スポナー：近づいたら“直前で”落下（各地点1回）
+  for (const sp of fallSpawners){
+    if (sp.used) continue;
+
+    const dx = Math.abs((player.x + player.w/2) - sp.x);
+
+    if (!sp.armed){
+      if (dx < sp.dropRange){
+        sp.armed = true;
+        sp.t = sp.delay;
+        sfx.warn();
+      }
+    } else {
+      sp.t -= dt;
+      if (sp.t <= 0){
+        spawnFallingChicken(sp.x, sp.yTop);
+        sp.used = true;
+        sp.armed = false;
+      }
+    }
+  }
+
+  updateEnemies(dt);
+  updateProjectiles(dt);
+  checkEnemyHits();
+  checkSockPickup();
+  checkGoal();
+
+  if (player.y > 520 + 220) startGameOver();
+
+  updateCamera();
+}
+
+function draw(dt){
+  ctx.clearRect(0,0,960,520);
+  drawBackground();
+
+  if (mode === MODE.HOME || mode === MODE.SELECT){
+    ctx.fillStyle = "rgba(183,243,194,0.95)";
+    ctx.fillRect(0, 420, 960, 100);
+
+    ctx.fillStyle = "#2f2f2f";
+    ctx.font = "46px system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText("ララの大冒険", 480, 170);
+    ctx.textAlign = "left";
+    ctx.font = "16px system-ui";
+    ctx.fillStyle = "rgba(47,47,47,0.8)";
+    ctx.fillText("スタート → 難易度を選んで冒険へ！", 320, 205);
+
+    drawLala(480-24, 330, 48, 60, true);
+    return;
+  }
+
+  drawPlatforms();
+
+  // ⚠（落下地点）
+  drawFallWarnings();
+
+  // socks
+  for (const s of socks){
+    if (s.taken) continue;
+    const sx = s.x - cameraX;
+    if (sx + s.w < -60 || sx > 960 + 60) continue;
+    drawSock(sx, s.y, s.w, s.h);
+  }
+
+  // house
+  if (house) drawHouse(house.x - cameraX, house.y, house.w, house.h);
+
+  // projectiles
+  drawProjectiles();
+
+  // enemies
+  for (const e of enemies){
+    if (!e.alive) continue;
+    const ex = e.x - cameraX;
+    if (ex + e.w < -60 || ex > 960 + 60) continue;
+    if (e.type === "flyer") drawFlyer(ex, e.y, e.w, e.h);
+    else drawChicken(ex, e.y, e.w, e.h, e.type);
+  }
+
+  // player
+  drawLala(player.x - cameraX, player.y, player.w, player.h, mode===MODE.WIN);
+
+  if (mode === MODE.WIN){
+    drawConfetti(dt);
+    ctx.fillStyle = "rgba(255,255,255,0.22)";
+    ctx.fillRect(0,0,960,520);
+    ctx.fillStyle = "#fff";
+    ctx.font = "40px system-ui";
+    ctx.fillText("CLEAR!! 🎉", 360, 230);
+  }
+
+  if (mode === MODE.GAMEOVER){
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.fillRect(0,0,960,520);
+    ctx.fillStyle = "#fff";
+    ctx.font = "44px system-ui";
+    ctx.fillText("GAME OVER", 330, 230);
+  }
+}
+
+// ---------- Loop ----------
+function loop(t){
+  const dt = Math.min(0.033, (t - lastT)/1000);
+  lastT = t;
+  update(dt);
+  draw(dt);
+  requestAnimationFrame(loop);
+}
+
+// ---------- Top buttons ----------
+btnHome.onclick = () => setMode(MODE.HOME);
+btnSelect.onclick = () => setMode(MODE.SELECT);
+btnReset.onclick = () => { if (diffKey) startGame(diffKey); };
+
+btnBgm.onclick = async () => {
+  try{
+    ensureAudio();
+    await audioCtx.resume();
+  }catch(_){}
+  bgmOn = !bgmOn;
+  btnBgm.textContent = `BGM: ${bgmOn ? "ON" : "OFF"}`;
+  if (bgmOn) startBgm(); else stopBgm();
+};
+
+document.addEventListener("visibilitychange", ()=>{
+  if (document.hidden){ stopBgm(); }
+  else if (bgmOn){ startBgm(); }
+});
+
+// ---------- start ----------
+updateOrientationUI();
+fitCanvas();
+setMode(MODE.HOME);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
