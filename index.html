@@ -139,25 +139,9 @@
       font-size:12px;
     }
 
-    /* ===== rotate hint ===== */
-    .rotateHint{
-      position:fixed; inset:0;
-      display:none;
-      place-items:center;
-      background: rgba(0,0,0,.45);
-      z-index: 9999;
-    }
-    .rotateCard{
-      padding:18px 16px;
-      border-radius:18px;
-      background: rgba(255,255,255,.86);
-      border:2px solid rgba(255,211,230,.75);
-      box-shadow:0 12px 30px rgba(0,0,0,.2);
-      text-align:center;
-      width:min(360px, 86vw);
-    }
-    .rotateBig{ font-size:20px; font-weight:900; }
-    .rotateSub{ margin-top:6px; font-size:13px; opacity:.85; line-height:1.4; }
+    /* ===== rotate hint =====
+       縦対応版なので常に非表示（HTMLは残してもOK） */
+    .rotateHint{ display:none !important; }
 
     /* ===== mobile controls ===== */
     .mobileControls{
@@ -165,7 +149,7 @@
       left:0; right:0;
       bottom: env(safe-area-inset-bottom, 0px);
       padding: 14px 14px calc(14px + env(safe-area-inset-bottom, 0px)) 14px;
-      display:none;
+      display:none; /* JS側で mobileLike のとき表示 */
       justify-content:space-between;
       align-items:flex-end;
       gap:14px;
@@ -197,8 +181,10 @@
       height:76px;
       border-radius:24px;
     }
-    @media (orientation: landscape) and (max-width: 980px){
-      .mobileControls{ display:flex; }
+
+    /* 縦でも横でも、スマホっぽい環境なら出す（PCは出さない） */
+    @media (max-width: 980px){
+      /* displayはJSで制御するのでここは触らない */
     }
   </style>
 </head>
@@ -223,7 +209,7 @@
     <div class="panel" id="ui"></div>
   </div>
 
-  <!-- 縦のとき案内 -->
+  <!-- 縦のとき案内（縦対応版なので非表示固定） -->
   <div id="rotateHint" class="rotateHint" aria-hidden="true">
     <div class="rotateCard">
       <div class="rotateBig">横画面にしてね 📱↪️</div>
@@ -231,7 +217,7 @@
     </div>
   </div>
 
-  <!-- モバイル操作 -->
+  <!-- モバイル操作（縦でも表示） -->
   <div id="mobileControls" class="mobileControls" aria-hidden="true">
     <div class="mcLeft">
       <button class="mcBtn" id="btnLeft">←</button>
@@ -244,9 +230,9 @@
 
 <script>
 /* =========================================================
-   ララの大冒険（完全版：PC+スマホ）
+   ララの大冒険（完全版：PC+スマホ縦対応）
    - PC: Arrow/A,D + Space
-   - Mobile: 横画面 + タッチボタン + (可能なら)Fullscreen
+   - Mobile: 縦/横どちらでもOK + タッチボタン + (可能なら)Fullscreen
    - 難易度: NORMAL / HARD / ONI
    - 落下チキン: ⚠マーク → 近づくと強点滅 → 直前で落下（1回きり＆残る）
    - 踏み判定を甘く
@@ -327,23 +313,18 @@ function stopBgm(){
 function isMobileLike(){
   return matchMedia("(pointer: coarse)").matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
-function isLandscape(){
-  return matchMedia("(orientation: landscape)").matches;
-}
+
+// 縦対応版：回転案内は使わず、スマホなら常に操作ボタンを出す
 function updateOrientationUI(){
   if (!isMobileLike()){
     rotateHint.style.display = "none";
     mobileControls.style.display = "none";
     return;
   }
-  if (isLandscape()){
-    rotateHint.style.display = "none";
-    mobileControls.style.display = "flex";
-  } else {
-    rotateHint.style.display = "grid";
-    mobileControls.style.display = "none";
-  }
+  rotateHint.style.display = "none";
+  mobileControls.style.display = "flex";
 }
+
 async function requestFullscreen(){
   const el = document.documentElement;
   try{
@@ -352,13 +333,16 @@ async function requestFullscreen(){
     }
   }catch(_){}
 }
-async function tryLockLandscape(){
+
+// 縦ロックを試す（効かない端末でもOK）
+async function tryLockPortrait(){
   try{
     if (screen.orientation && screen.orientation.lock){
-      await screen.orientation.lock("landscape");
+      await screen.orientation.lock("portrait");
     }
   }catch(_){}
 }
+
 function bindHold(btn, keyCode){
   if (!btn) return;
   const down = (e)=>{ e.preventDefault(); keys.add(keyCode); };
@@ -374,6 +358,7 @@ bindHold(btnLeft, "ArrowLeft");
 bindHold(btnRight, "ArrowRight");
 bindHold(btnJump, "Space");
 
+// 画面スクロール誤爆を防ぐ（スマホのみ）
 document.addEventListener("touchmove", (e)=>{ if (isMobileLike()) e.preventDefault(); }, { passive:false });
 
 function fitCanvas(){
@@ -382,7 +367,10 @@ function fitCanvas(){
 
   const containerWidth = canvas.parentElement.clientWidth || window.innerWidth;
   const maxW = Math.min(containerWidth, window.innerWidth);
-  const maxH = Math.min(window.innerHeight - 160, window.innerHeight);
+
+  // 縦画面だと操作ボタンが被るので、下を少し多めに空ける
+  const reservedBottom = isMobileLike() ? 210 : 160;
+  const maxH = Math.min(window.innerHeight - reservedBottom, window.innerHeight);
 
   const scale = Math.min(maxW / logicalW, maxH / logicalH);
   const cssW = Math.floor(logicalW * scale);
@@ -404,7 +392,7 @@ async function enterMobilePlayMode(){
   updateOrientationUI();
   if (isMobileLike()){
     await requestFullscreen();
-    await tryLockLandscape();
+    await tryLockPortrait();
   }
   fitCanvas();
 }
@@ -414,7 +402,7 @@ const MODE = { HOME:"HOME", SELECT:"SELECT", PLAY:"PLAY", WIN:"WIN", GAMEOVER:"G
 let mode = MODE.HOME;
 
 const DIFF = { NORMAL:"普通", HARD:"難しい", ONI:"鬼" };
-let diffKey = null;        // "NORMAL" | "HARD" | "ONI"
+let diffKey = null;
 let difficultyLabel = null;
 
 const GRAVITY = 0.75;
@@ -447,10 +435,8 @@ const player = {
   vx: 0, vy: 0,
   onGround: false,
   spawnX: 60, spawnY: 0,
-
   jumpBoostTimer: 0,
   jumpBoostMul: 1.38,
-
   standingOnId: null,
 };
 
@@ -490,7 +476,6 @@ const addFallSpawner = (x, yTop=70, warnRange=240, dropRange=85, delay=0.18)=>{
 };
 
 function spawnFallingChicken(x, yTop){
-  // 落下開始（1回落ちたらその場に“残る”）
   enemies.push({
     type:"falling",
     x: x - 18,
@@ -501,7 +486,6 @@ function spawnFallingChicken(x, yTop){
     vy: 1.5,
     alive:true,
     onGround:false,
-    // 落ちた後はその場で止まる
     landed:false
   });
 }
@@ -553,7 +537,6 @@ function resetEnemies(kind){
 
   const groundY = FLOOR_Y - 28;
 
-  // ベース（企画書：ガーガーチキン系の役割）
   addWalker(520,  groundY, 480, 680);
   addJumper(1120, groundY, 980, 1250);
   addFlyer(1750, 260, 1650, 2000);
@@ -579,7 +562,6 @@ function resetEnemies(kind){
     addJumper(3920, groundY, 3820, 4100);
     addCharger(4460, groundY, 4380, 4660);
 
-    // ファイア敵（鬼っぽさ）
     addFire(2080, groundY, 1980, 2260);
     addFire(3600, groundY, 3480, 3820);
 
@@ -703,10 +685,9 @@ function updateProjectiles(dt){
 function enemyLand(e){
   e.onGround = true;
   e.vy = 0;
-  // fallingは落下後 “その場に残る”
   if (e.type === "falling"){
     e.landed = true;
-    e.type = "fallHazard"; // 止まる敵
+    e.type = "fallHazard";
     e.vx = 0;
     e.minX = e.x;
     e.maxX = e.x + 1;
@@ -726,12 +707,10 @@ function updateEnemies(dt){
       continue;
     }
 
-    // fallHazard: その場固定（歩かない）
     if (e.type === "fallHazard"){
       e.vx = 0;
     }
 
-    // movement for walkers/jumpers/chargers/fire (fallingはx固定)
     if (e.type !== "falling" && e.type !== "fallHazard"){
       e.x += e.vx;
       if (e.minX != null && e.maxX != null){
@@ -773,17 +752,14 @@ function updateEnemies(dt){
       }
     }
 
-    // gravity for ground types + falling
     if (e.type !== "flyer"){
       e.vy += GRAVITY;
       e.vy = Math.min(e.vy, MAX_FALL);
       e.y += e.vy;
     }
 
-    // landing
     e.onGround = false;
 
-    // floor
     for (const f of floorSegments){
       if (overlap(e, f) && e.vy > 0){
         e.y = f.y - e.h;
@@ -792,7 +768,6 @@ function updateEnemies(dt){
       }
     }
 
-    // platforms
     if (!e.onGround){
       for (const p of platforms){
         if (overlap(e, p) && e.vy > 0){
@@ -803,7 +778,6 @@ function updateEnemies(dt){
       }
     }
 
-    // moving platforms
     if (!e.onGround){
       for (const m of movingPlatforms){
         if (overlap(e, m) && e.vy > 0){
@@ -814,7 +788,6 @@ function updateEnemies(dt){
       }
     }
 
-    // out
     if (e.y > 900){
       e.y = FLOOR_Y - e.h;
       enemyLand(e);
@@ -832,7 +805,6 @@ function startGameOver(){
 }
 
 function checkEnemyHits(){
-  // fireballs hit
   for (const b of projectiles){
     if (overlap(player, b)){ startGameOver(); return; }
   }
@@ -841,7 +813,6 @@ function checkEnemyHits(){
     if (!e.alive) continue;
     if (!overlap(player, e)) continue;
 
-    // ★踏み判定：甘くする（上からっぽい＆余裕）
     const prevBottom = prevPlayerY + player.h;
     const playerCenterX = player.x + player.w/2;
     const enemyCenterX  = e.x + e.w/2;
@@ -885,7 +856,7 @@ function renderHome(){
         <span class="kbd">Space</span> でジャンプ
       </div>
       <button class="primary" id="startBtn">スタート</button>
-      <div class="sub">スマホは横画面でボタン操作だよ</div>
+      <div class="sub">スマホは縦画面でもボタンで遊べるよ</div>
     </div>
   `;
   document.getElementById("startBtn").onclick = async () => {
@@ -916,7 +887,7 @@ function renderSelect(){
           <button class="primary" data-d="ONI">PLAY</button>
         </div>
       </div>
-      <div class="sub">（スマホは横画面推奨）</div>
+      <div class="sub">（スマホは縦でも横でもOK）</div>
     </div>
   `;
 
@@ -998,7 +969,6 @@ function resetStage(kind){
   diffKey = kind;
   difficultyLabel = DIFF[kind];
 
-  // pits（幅は調整済み）
   pits =
     kind==="NORMAL"
       ? [{x:900,w:120},{x:2100,w:140},{x:3000,w:160}]
@@ -1007,7 +977,6 @@ function resetStage(kind){
         : [{x:760,w:180},{x:1540,w:200},{x:2400,w:220},{x:3240,w:220},{x:3960,w:220}];
 
   floorSegments = buildFloorSegments();
-
   platforms = [];
 
   if (kind === "NORMAL") {
@@ -1062,12 +1031,10 @@ function resetStage(kind){
     platforms.push({ id:"o15", x: 4180, y: 310, w: 110, h: 18 });
     platforms.push({ id:"o16", x: 4380, y: 250, w: 120, h: 18 });
 
-    // 基本ジャンプで乗れる“救済足場”（前/中/後に1つ）
     platforms.push({ id:"oEasy2", x: 1980, y: 330, w: 200, h: 18 });
     platforms.push({ id:"oEasy3", x: 4050, y: 330, w: 200, h: 18 });
   }
 
-  // moving platforms
   movingPlatforms = [];
   if (kind !== "NORMAL"){
     movingPlatforms.push({ id:"m1", baseX: 1500, x:1500, y: 300, w: 140, h: 18, range: 160, speed: 90, dir: 1, dx:0 });
@@ -1077,7 +1044,6 @@ function resetStage(kind){
     movingPlatforms.push({ id:"m3", baseX: 4420, x:4420, y: 330, w: 160, h: 18, range: 180, speed: 120, dir: 1, dx:0 });
   }
 
-  // socks（足場の上）
   socks = [];
   function putSockOn(x, platformY){
     socks.push({ x, y: platformY - 30, w: 26, h: 26, taken:false });
@@ -1098,10 +1064,8 @@ function resetStage(kind){
     putSockOn(4385, 250);
   }
 
-  // goal house
   house = { x: WORLD_W - 260, y: FLOOR_Y - 120, w: 160, h: 120 };
 
-  // player reset
   player.x = player.spawnX;
   player.y = FLOOR_Y - player.h;
   player.spawnY = player.y;
@@ -1110,10 +1074,8 @@ function resetStage(kind){
   player.jumpBoostTimer = 0;
   player.standingOnId = null;
 
-  // enemies
   resetEnemies(kind);
 
-  // falling spawners
   fallSpawners = [];
   if (kind === "HARD"){
     addFallSpawner(1580, 80, 240, 85, 0.18);
@@ -1432,7 +1394,6 @@ function drawProjectiles(){
 }
 
 function drawFallWarnings(){
-  // 落下ポイントの上に小さな⚠（近いと強点滅）
   for (const sp of fallSpawners){
     if (sp.used) continue;
     const sx = sp.x - cameraX;
@@ -1490,7 +1451,6 @@ function update(dt){
 
   renderHud();
 
-  // input
   const left  = keys.has("ArrowLeft") || keys.has("KeyA");
   const right = keys.has("ArrowRight") || keys.has("KeyD");
   const jump  = keys.has("Space");
@@ -1512,7 +1472,6 @@ function update(dt){
 
   resolveCollisions();
 
-  // ★落下スポナー：近づいたら“直前で”落下（各地点1回）
   for (const sp of fallSpawners){
     if (sp.used) continue;
 
@@ -1567,11 +1526,8 @@ function draw(dt){
   }
 
   drawPlatforms();
-
-  // ⚠（落下地点）
   drawFallWarnings();
 
-  // socks
   for (const s of socks){
     if (s.taken) continue;
     const sx = s.x - cameraX;
@@ -1579,13 +1535,10 @@ function draw(dt){
     drawSock(sx, s.y, s.w, s.h);
   }
 
-  // house
   if (house) drawHouse(house.x - cameraX, house.y, house.w, house.h);
 
-  // projectiles
   drawProjectiles();
 
-  // enemies
   for (const e of enemies){
     if (!e.alive) continue;
     const ex = e.x - cameraX;
@@ -1594,7 +1547,6 @@ function draw(dt){
     else drawChicken(ex, e.y, e.w, e.h, e.type);
   }
 
-  // player
   drawLala(player.x - cameraX, player.y, player.w, player.h, mode===MODE.WIN);
 
   if (mode === MODE.WIN){
